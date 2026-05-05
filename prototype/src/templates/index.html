@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agente Virtual Académico</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <section class="agent-panel">
+        <div class="avatar-card">
+            <div id="avatar" class="avatar idle">
+                <div class="head">
+                    <div class="hair"></div>
+
+                    <div class="eyes">
+                        <div class="eye left-eye"></div>
+                        <div class="eye right-eye"></div>
+                    </div>
+
+                    <div id="mouth" class="mouth"></div>
+                </div>
+
+                <div class="neck"></div>
+
+                <div class="body">
+                    <div class="tie"></div>
+                </div>
+            </div>
+
+            <h1>Agente Académico</h1>
+            <p class="subtitle">Conceptos básicos de bases de datos</p>
+
+            <div id="agentStatus" class="status">En espera</div>
+        </div>
+    </section>
+
+    <section class="chat-panel">
+        <div class="chat-header">
+            <h2>Interacción guiada</h2>
+            <p>Haz una pregunta o selecciona una opción.</p>
+        </div>
+
+        <div class="guided-buttons">
+            <button onclick="sendGuidedQuestion('Explícame qué es una base de datos.')">
+                ¿Qué es una base de datos?
+            </button>
+            <button onclick="sendGuidedQuestion('Explícame qué es una tabla en bases de datos.')">
+                ¿Qué es una tabla?
+            </button>
+            <button onclick="sendGuidedQuestion('Explícame qué es una llave primaria con un ejemplo sencillo.')">
+                Llave primaria
+            </button>
+            <button onclick="sendGuidedQuestion('Explícame qué es una relación entre tablas.')">
+                Relación entre tablas
+            </button>
+        </div>
+
+        <div id="chatMessages" class="chat-messages">
+            <div class="message agent-message">
+                Hola. Soy tu agente académico. Puedo ayudarte con conceptos básicos de bases de datos.
+            </div>
+        </div>
+
+        <div class="session-info">
+            <span>Sesión actual:</span>
+            <strong id="sessionIdLabel">Iniciando sesión...</strong>
+        </div>
+
+        <div class="chat-input-area">
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Escribe tu pregunta sobre bases de datos..."
+                onkeydown="handleEnter(event)"
+            >
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+
+        <div class="session-actions">
+            <button class="finish-button" onclick="finishSession()">Finalizar sesión</button>
+        </div>
+
+        <div id="uxPanel" class="ux-panel hidden">
+            <h2>Cuestionario UX breve</h2>
+            <p class="ux-description">
+                Evalúe su experiencia con el agente virtual. Use una escala de 1 a 7.
+            </p>
+
+            <div class="ux-scale-info">
+                <span>1 = valoración más negativa</span>
+                <span>7 = valoración más positiva</span>
+            </div>
+
+            <form id="uxForm">
+
+                <div class="ux-item">
+                    <label>1. Obstructivo — Apoyador</label>
+                    <input type="range" min="1" max="7" value="4" id="item_1">
+                    <span id="value_item_1">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>2. Complicado — Fácil</label>
+                    <input type="range" min="1" max="7" value="4" id="item_2">
+                    <span id="value_item_2">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>3. Ineficiente — Eficiente</label>
+                    <input type="range" min="1" max="7" value="4" id="item_3">
+                    <span id="value_item_3">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>4. Confuso — Claro</label>
+                    <input type="range" min="1" max="7" value="4" id="item_4">
+                    <span id="value_item_4">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>5. Aburrido — Emocionante</label>
+                    <input type="range" min="1" max="7" value="4" id="item_5">
+                    <span id="value_item_5">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>6. No interesante — Interesante</label>
+                    <input type="range" min="1" max="7" value="4" id="item_6">
+                    <span id="value_item_6">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>7. Convencional — Original</label>
+                    <input type="range" min="1" max="7" value="4" id="item_7">
+                    <span id="value_item_7">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>8. Común — Novedoso</label>
+                    <input type="range" min="1" max="7" value="4" id="item_8">
+                    <span id="value_item_8">4</span>
+                </div>
+
+                <div class="ux-open-question">
+                    <label for="openComment">
+                        ¿Qué aspecto del agente virtual le pareció más positivo o qué mejoraría?
+                    </label>
+                    <textarea id="openComment" rows="4" placeholder="Escriba un comentario breve..."></textarea>
+                </div>
+
+                <button type="button" class="save-ux-button" onclick="submitUXEvaluation()">
+                    Guardar evaluación UX
+                </button>
+            </form>
+
+            <div id="uxResult" class="ux-result hidden"></div>
+
+            <div id="aiEvaluationPanel" class="ai-evaluation-panel hidden">
+                <h3>Evaluación UX generada por IA</h3>
+
+                <button type="button" class="ai-evaluate-button" onclick="runAIEvaluation()">
+                    Generar evaluación UX con IA
+                </button>
+
+                <div id="aiEvaluationResult" class="ai-evaluation-result hidden"></div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

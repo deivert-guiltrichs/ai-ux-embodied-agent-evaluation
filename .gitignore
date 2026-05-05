@@ -1,0 +1,28 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+
+# Logs
+*.log
+
+# Generated data
+prototype/src/data/sessions/
+prototype/src/data/transcripts/
+prototype/src/data/human_evaluations/
+prototype/src/data/ai_evaluations/
+prototype/src/data/comparisons/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
