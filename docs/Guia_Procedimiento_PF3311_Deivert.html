@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocolo Oficial de Experimento — PF3311-UXLLM-PoC-2026</title>
+    <style>
+        :root {
+            --primary: #0F3B82;
+            --primary-light: #2A5BAA;
+            --accent: #6D28D9;
+            --ok: #047857;
+            --warn: #B45309;
+            --danger: #B91C1C;
+            --bg-body: #F4F7F6;
+            --bg-card: #FFFFFF;
+            --text-main: #263238;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --radius: 10px;
+            --shadow: 0 8px 18px rgba(15, 59, 130, 0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container { max-width: 960px; width: 100%; }
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 42px;
+            border: 1px solid var(--border-color);
+        }
+        h1 {
+            color: var(--primary);
+            font-size: 1.95rem;
+            margin-bottom: 8px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 12px;
+        }
+        h2 {
+            color: var(--primary-light);
+            font-size: 1.35rem;
+            margin-top: 34px;
+            margin-bottom: 16px;
+        }
+        h3 {
+            color: var(--text-main);
+            font-size: 1.08rem;
+            margin-top: 22px;
+            margin-bottom: 10px;
+        }
+        p { margin-bottom: 14px; }
+        ul, ol { margin-bottom: 15px; padding-left: 24px; }
+        li { margin-bottom: 8px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0 20px 0;
+            font-size: 0.92rem;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            vertical-align: top;
+        }
+        th {
+            background: #EFF6FF;
+            color: var(--primary);
+            text-align: left;
+        }
+        .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+        .metadata-box {
+            background-color: #F8FAFC;
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+        .metadata-box p { margin-bottom: 6px; font-size: 0.96rem; }
+        .metadata-box strong { color: var(--primary); }
+        .quote {
+            background-color: #F1F5F9;
+            font-style: italic;
+            padding: 15px;
+            border-radius: var(--radius);
+            margin: 14px 0;
+            color: #475569;
+            border: 1px solid #E2E8F0;
+        }
+        .note {
+            background: #FFFBEB;
+            border-left: 4px solid var(--warn);
+            padding: 14px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin: 12px 0 18px 0;
+        }
+        .success {
+            background: #ECFDF5;
+            border-left: 4px solid var(--ok);
+            padding: 14px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin: 12px 0 18px 0;
+        }
+        .danger {
+            background: #FEF2F2;
+            border-left: 4px solid var(--danger);
+            padding: 14px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin: 12px 0 18px 0;
+        }
+        .checkbox-list { list-style: none; padding-left: 0; }
+        .checkbox-list li { display: flex; align-items: flex-start; margin-bottom: 10px; }
+        .checkbox-list li::before {
+            content: '☐';
+            font-size: 1.2rem;
+            margin-right: 10px;
+            color: var(--primary-light);
+            line-height: 1.2;
+        }
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 12px 0;
+        }
+        label { font-weight: 600; color: var(--primary); display: block; margin-bottom: 6px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font: inherit;
+            background: #FFFFFF;
+        }
+        textarea { min-height: 92px; resize: vertical; }
+        button {
+            background: var(--primary);
+            color: #FFFFFF;
+            border: 0;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        button.secondary { background: var(--accent); }
+        button:hover { filter: brightness(1.05); }
+        .hidden { display: none; }
+        .pill {
+            display: inline-block;
+            background: #E0E7FF;
+            color: #3730A3;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+        code, pre {
+            background: #0F172A;
+            color: #E2E8F0;
+            border-radius: 8px;
+            padding: 2px 6px;
+        }
+        pre { padding: 14px; overflow-x: auto; margin: 12px 0 18px 0; }
+        .footer {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 720px) {
+            .card { padding: 26px; }
+            .field-row { grid-template-columns: 1fr; }
+            body { padding: 24px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>Protocolo Oficial de Procedimiento del Investigador</h1>
+        <p class="subtitle">Prueba de Concepto · Evaluación UX aumentada con IA para agentes virtuales corporizados</p>
+
+        <div class="metadata-box">
+            <p><strong>Código del estudio:</strong> PF3311-UXLLM-PoC-2026</p>
+            <p><strong>Nombre del estudio:</strong> Evaluación UX aumentada con IA para agentes virtuales corporizados</p>
+            <p><strong>Investigador:</strong> Deivert Guiltrichs Cordero</p>
+            <p><strong>Unidad ejecutora:</strong> Programa de Posgrado en Computación e Informática, Universidad de Costa Rica</p>
+            <p><strong>Curso:</strong> PF-3311 Agentes Virtuales Inteligentes · I Ciclo 2026</p>
+            <p><strong>Tipo de estudio:</strong> Prueba de concepto académica, exploratoria y de bajo riesgo</p>
+            <p><strong>Duración estimada:</strong> 10 a 15 minutos de interacción + 5 minutos de cuestionarios post-interacción</p>
+        </div>
+
+        <h2>0. Inicialización de la sesión</h2>
+        <p>Antes de iniciar la interacción, genere un identificador anónimo y asigne aleatoriamente la condición experimental.</p>
+
+        <div class="field-row">
+            <div>
+                <label for="participantId">ID anónimo del participante</label>
+                <input id="participantId" readonly placeholder="Presione el botón para generar ID">
+            </div>
+            <div>
+                <label for="condition">Condición asignada</label>
+                <input id="condition" readonly placeholder="A o B">
+            </div>
+        </div>
+        <button onclick="initializeSession()">Generar ID y asignar condición</button>
+        <p id="conditionDescription" class="success hidden"></p>
+
+        <h2>1. Resumen del estudio y preparación</h2>
+        <p>Esta guía detalla el protocolo para evaluar la interacción de participantes con un agente virtual académico en una sesión única y controlada. El estudio compara dos condiciones:</p>
+        <ul>
+            <li><strong>Condición A:</strong> agente virtual corporizado con avatar visual básico e interfaz conversacional.</li>
+            <li><strong>Condición B:</strong> interfaz conversacional textual plana, sin avatar ni animación.</li>
+        </ul>
+        <p>Ambas condiciones deberán utilizar el mismo dominio temático, la misma tarea, el mismo guion base y el mismo modelo conversacional operativo, denominado <strong>LLM-A</strong>. Posteriormente, un segundo modelo, denominado <strong>LLM-B</strong>, evaluará la transcripción de la interacción para evitar circularidad metodológica.</p>
+
+        <h3>1.1 Checklist de materiales</h3>
+        <ul class="checkbox-list">
+            <li>Computadora configurada y probada con la plataforma del agente o la interfaz textual.</li>
+            <li>Enlace o ruta local de la Condición A: agente virtual corporizado con avatar visual.</li>
+            <li>Enlace o ruta local de la Condición B: interfaz conversacional textual plana.</li>
+            <li>Archivo o formulario digital de consentimiento informado.</li>
+            <li>Instrumento post-interacción UEQ-S o SUS, según la versión final del estudio.</li>
+            <li>Escala Godspeed reducida, si se aplica como complemento para percepción del agente.</li>
+            <li>Formulario de pregunta abierta post-interacción.</li>
+            <li>Carpeta segura para almacenar logs bajo ID anónimo.</li>
+            <li>Documento de bitácora del investigador con ID, condición, duración y observaciones no sensibles.</li>
+        </ul>
+
+        <h2>2. Consentimiento informado</h2>
+        <p><strong>Saludo sugerido del investigador:</strong></p>
+        <div class="quote">"Hola, muchas gracias por participar. Mi nombre es Deivert Guiltrichs Cordero. El día de hoy realizará una prueba académica breve de un prototipo de agente virtual diseñado para explicar conceptos básicos de bases de datos."</div>
+
+        <p><strong>Texto de consentimiento informado:</strong></p>
+        <div class="quote">
+            Usted participará en una prueba académica de un prototipo de agente virtual diseñado para explicar conceptos básicos de bases de datos. Durante la sesión, interactuará con una interfaz conversacional y posteriormente completará cuestionarios breves sobre su experiencia. La participación es voluntaria. No se recopilarán datos sensibles, credenciales, documentos personales ni información privada. La interacción será registrada únicamente mediante un ID anónimo de participante y una transcripción de la conversación con fines de análisis académico. Puede retirarse en cualquier momento sin consecuencia alguna.
+        </div>
+
+        <label for="consent">¿Acepta participar voluntariamente en esta prueba académica?</label>
+        <select id="consent" onchange="handleConsent()">
+            <option value="">Seleccione una opción</option>
+            <option value="yes">Sí, acepto participar</option>
+            <option value="no">No acepto participar</option>
+        </select>
+
+        <p id="consentAccepted" class="success hidden">Consentimiento aceptado. Continúe con la asignación de condición y la fase de interacción.</p>
+        <p id="consentRejected" class="danger hidden">El participante no aceptó participar. Cierre la sesión y no cargue ninguna condición experimental.</p>
+
+        <div id="protocolContent" class="hidden">
+            <h2>3. Asignación de condición</h2>
+            <p>La condición deberá ser asignada aleatoriamente. El investigador no debe describir una condición como mejor, más avanzada, más humana o más completa que la otra. Use únicamente descripciones neutrales.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Grupo</th>
+                        <th>Condición</th>
+                        <th>Descripción operativa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>A</strong></td>
+                        <td>Agente virtual corporizado</td>
+                        <td>Interfaz conversacional con avatar visual básico. El avatar representa al agente académico, pero no se deben inducir expectativas sobre mayor inteligencia, empatía o calidad.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>B</strong></td>
+                        <td>Chat textual plano</td>
+                        <td>Interfaz conversacional sin avatar, animaciones ni representación corporal. Mantiene el mismo dominio, tarea y modelo conversacional base.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>4. Instrucciones neutras para el participante</h2>
+            <p><strong>Instrucción que debe leerse de forma textual:</strong></p>
+            <div class="quote">
+                "A continuación, interactuará con un sistema conversacional académico. Su tarea consiste en solicitar una explicación sencilla sobre diseño de bases de datos, pedir un ejemplo cotidiano y confirmar si comprendió la explicación. No hay respuestas correctas o incorrectas. Evalúe la experiencia según su percepción personal."
+            </div>
+
+            <h3>4.1 Tareas de interacción</h3>
+            <ol>
+                <li>Solicite al sistema una explicación sencilla sobre qué es el diseño de bases de datos.</li>
+                <li>Pida un ejemplo cotidiano que le ayude a comprender el concepto.</li>
+                <li>Pregunte qué diferencia hay entre una clave primaria y una clave foránea.</li>
+                <li>Confirme si la explicación fue clara o solicite una aclaración.</li>
+                <li>Finalice la interacción y complete los cuestionarios post-interacción.</li>
+            </ol>
+
+            <div class="note">
+                <strong>Control contra sesgos de navegación o inducción:</strong> no indique al participante qué debería sentir o notar. No mencione embodiment, avatar, condición experimental, comparación humano-LLM ni hipótesis del estudio antes de completar los cuestionarios.
+            </div>
+
+            <h2>5. Fase de interacción</h2>
+            <p>El investigador deberá cargar la condición asignada y retirarse de la vista directa del participante, o permanecer en silencio sin guiar la navegación, salvo que exista un problema técnico.</p>
+
+            <p><strong>Guion de inicio:</strong></p>
+            <div class="quote">
+                "La sesión durará aproximadamente de 10 a 15 minutos. Puede escribir sus preguntas en la interfaz. Cuando termine las tareas indicadas, avíseme para continuar con los cuestionarios. Puede detener la participación en cualquier momento."
+            </div>
+
+            <h3>5.1 Registro operativo de la sesión</h3>
+            <div class="field-row">
+                <div>
+                    <label for="sessionStart">Hora de inicio</label>
+                    <input id="sessionStart" type="datetime-local">
+                </div>
+                <div>
+                    <label for="sessionEnd">Hora de finalización</label>
+                    <input id="sessionEnd" type="datetime-local">
+                </div>
+            </div>
+            <div class="field-row">
+                <div>
+                    <label for="turns">Número aproximado de intervenciones del participante</label>
+                    <input id="turns" type="number" min="0" placeholder="Ej. 8">
+                </div>
+                <div>
+                    <label for="completed">¿Completó la tarea guiada?</label>
+                    <select id="completed">
+                        <option value="">Seleccione</option>
+                        <option value="true">Sí</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <label for="technicalNotes">Notas técnicas no sensibles</label>
+            <textarea id="technicalNotes" placeholder="Ej. fallo de red, demora en carga, confusión con botón, etc. No anotar datos personales."></textarea>
+
+            <h2>6. Cuestionarios post-interacción</h2>
+            <p>Al finalizar la interacción, solicite al participante completar los siguientes instrumentos:</p>
+            <ol>
+                <li><strong>UEQ-S</strong> o <strong>SUS</strong>, según la versión final del estudio.</li>
+                <li><strong>Godspeed reducido</strong>, si se requiere medir percepción del agente: antropomorfismo, simpatía, inteligencia percibida y seguridad percibida.</li>
+                <li><strong>Pregunta abierta final:</strong> “¿Qué aspecto de la interacción le pareció más positivo o más problemático?”</li>
+            </ol>
+
+            <p><strong>Guion post-interacción:</strong></p>
+            <div class="quote">
+                "Excelente, muchas gracias. Ahora le pediré que complete unos cuestionarios breves sobre su experiencia. Responda según su percepción personal; no hay respuestas correctas o incorrectas."
+            </div>
+
+            <h2>7. Evaluación complementaria con LLM-B</h2>
+            <p>Después de la sesión, la transcripción o descripción controlada de la interacción será entregada a un segundo modelo de lenguaje, <strong>LLM-B</strong>, distinto del modelo utilizado para operar el agente. El LLM-B completará el mismo instrumento UX aplicado a los usuarios humanos.</p>
+            <p>Esta separación metodológica busca reducir el riesgo de circularidad, evitando que el mismo modelo que genera la interacción evalúe sus propios patrones de respuesta.</p>
+
+            <h2>8. Plan de anonimización y resguardo de datos</h2>
+            <p>El estudio no debe solicitar nombre, cédula, correo, teléfono, institución, credenciales, documentos personales ni datos sensibles. Todos los registros se asociarán únicamente al ID anónimo generado al inicio de la sesión.</p>
+
+            <h3>8.1 Campos permitidos en los logs</h3>
+            <pre>{
+  "participant_id": "P-2026-XXXXXXXX",
+  "condition": "A o B",
+  "session_start": "YYYY-MM-DDTHH:MM",
+  "session_end": "YYYY-MM-DDTHH:MM",
+  "session_duration_seconds": 0,
+  "task_completed": true,
+  "interaction_turns": 0,
+  "transcript": [],
+  "ueq_s_or_sus": {},
+  "godspeed_reduced": {},
+  "open_comment": "",
+  "technical_notes": ""
+}</pre>
+
+            <h3>8.2 Estructura de resguardo recomendada</h3>
+            <pre>/evaluation/data/raw_logs/
+/evaluation/data/processed/
+/evaluation/data/exports/</pre>
+
+            <div class="note">
+                <strong>Limitación metodológica:</strong> si el LLM-B evalúa solo una transcripción textual, no podrá valorar directamente tono de voz, prosodia, gestos, expresiones faciales, movimiento ocular, lip-sync ni tiempos reales de respuesta multimodal. Sus resultados se interpretarán como evaluación complementaria de la interacción documentada, no como sustituto de la experiencia humana.
+            </div>
+
+            <h2>9. Cierre de la sesión</h2>
+            <p><strong>Despedida sugerida:</strong></p>
+            <div class="quote">
+                "Muchas gracias por su tiempo y participación. Su aporte será utilizado únicamente con fines académicos y de forma anónima. Que tenga un excelente día."
+            </div>
+
+            <h2>10. Exportación local del registro de sesión</h2>
+            <p>Este botón genera un archivo JSON local con los datos operativos básicos de la sesión. No incluye respuestas completas de cuestionarios, salvo que sean incorporadas posteriormente por el investigador.</p>
+            <button class="secondary" onclick="downloadSessionJson()">Descargar registro JSON de sesión</button>
+        </div>
+
+        <div class="footer">
+            PF-3311 · Agentes Virtuales Inteligentes · Universidad de Costa Rica · I Ciclo 2026
+        </div>
+    </div>
+</div>
+
+<script>
+function initializeSession() {
+    const participantId = "P-2026-" + crypto.randomUUID().slice(0, 8).toUpperCase();
+    const group = Math.random() < 0.5 ? "A" : "B";
+    document.getElementById("participantId").value = participantId;
+    document.getElementById("condition").value = group;
+
+    const desc = group === "A"
+        ? "Condición A asignada: agente virtual corporizado con avatar visual básico."
+        : "Condición B asignada: interfaz conversacional textual plana sin avatar.";
+    const descEl = document.getElementById("conditionDescription");
+    descEl.textContent = desc;
+    descEl.classList.remove("hidden");
+}
+
+function handleConsent() {
+    const consent = document.getElementById("consent").value;
+    const accepted = document.getElementById("consentAccepted");
+    const rejected = document.getElementById("consentRejected");
+    const content = document.getElementById("protocolContent");
+
+    accepted.classList.add("hidden");
+    rejected.classList.add("hidden");
+    content.classList.add("hidden");
+
+    if (consent === "yes") {
+        accepted.classList.remove("hidden");
+        content.classList.remove("hidden");
+    } else if (consent === "no") {
+        rejected.classList.remove("hidden");
+    }
+}
+
+function secondsBetween(start, end) {
+    if (!start || !end) return null;
+    const s = new Date(start);
+    const e = new Date(end);
+    if (isNaN(s.getTime()) || isNaN(e.getTime())) return null;
+    return Math.max(0, Math.round((e - s) / 1000));
+}
+
+function downloadSessionJson() {
+    const participantId = document.getElementById("participantId").value || "NO_ID_GENERATED";
+    const condition = document.getElementById("condition").value || "NO_CONDITION_ASSIGNED";
+    const start = document.getElementById("sessionStart").value;
+    const end = document.getElementById("sessionEnd").value;
+
+    const data = {
+        participant_id: participantId,
+        condition: condition,
+        consent: document.getElementById("consent").value === "yes",
+        session_start: start,
+        session_end: end,
+        session_duration_seconds: secondsBetween(start, end),
+        task_completed: document.getElementById("completed").value,
+        interaction_turns: document.getElementById("turns").value,
+        transcript: [],
+        ueq_s_or_sus: {},
+        godspeed_reduced: {},
+        open_comment: "",
+        technical_notes: document.getElementById("technicalNotes").value,
+        data_policy: "No personal data, credentials, IDs, emails, documents, screenshots, or sensitive information should be stored."
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = participantId + "_session_log.json";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
