@@ -24,6 +24,16 @@ El prototipo incluye:
 * Evaluación posterior con IA usando UEQ-S.
 * Exportación externa de datos para análisis estadístico.
 
+## Información académica
+
+**Universidad:** Universidad de Costa Rica  
+**Programa:** Programa de Posgrado en Computación e Informática  
+**Curso:** PF-3311 Agentes Virtuales Inteligentes  
+**Proyecto:** Evaluación UX aumentada con IA para agentes virtuales corporizados  
+**Estudiante / investigador:** Deivert Guiltrichs Cordero  
+**Profesor:** Alexander Barquero Elizondo  
+**Ciclo:** I Ciclo, 2026  
+
 ## 2. Objetivo de la PoC
 
 Demostrar la integración funcional de los principales componentes de la arquitectura técnica propuesta:
