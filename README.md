@@ -396,16 +396,12 @@ __pycache__/
 * Despliegue web con backend seguro.
 * Aplicar prueba piloto.
 * Completar análisis estadístico externo con datos reales.
-* Agregar enlace al video de demostración.
-* Incorporar documento PDF del Entregable 2 en `/docs`.
 
 ## 17. Video de demostración
 
 Enlace al video de demostración:
 
-```txt
-Pendiente: agregar enlace no listado de YouTube.
-```
+https://youtu.be/jhzsNL0CJfw
 
 ## 18. Nota sobre VRM
 
