@@ -1,23 +1,53 @@
-# Environment variables
+# Environment variables and secrets
 .env
+*.env
+.env.local
+.env.production
 
-# Python
+# Python virtual environments
+venv/
+.venv/
+prototype/venv/
+
+# Python cache
 __pycache__/
+*/__pycache__/
 *.pyc
 *.pyo
 *.pyd
-venv/
-.venv/
 
 # Logs
 *.log
 
-# Generated data
-prototype/src/data/sessions/
-prototype/src/data/transcripts/
-prototype/src/data/human_evaluations/
-prototype/src/data/ai_evaluations/
-prototype/src/data/comparisons/
+# Generated experimental data
+prototype/src/data/
+analysis/exports/*
+!analysis/exports/README.md
+analysis/data/*
+!analysis/data/README.md
+
+# Local generated files
+*.bak
+*.tmp
+*.temp
+
+# Jupyter / notebook checkpoints
+.ipynb_checkpoints/
+
+# Coverage / test caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# R local files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Office temporary files
+~$*.docx
+~$*.xlsx
+~$*.pptx
 
 # IDE
 .vscode/
@@ -26,3 +56,6 @@ prototype/src/data/comparisons/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local Git metadata when sharing ZIP files manually
+.git/

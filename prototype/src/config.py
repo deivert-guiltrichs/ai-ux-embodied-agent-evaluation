@@ -12,8 +12,19 @@ load_dotenv(dotenv_path=ENV_PATH)
 class Settings:
     def __init__(self):
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "")
-        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+        # Compatibility with previous versions
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+
         self.app_env = os.getenv("APP_ENV", "local")
+
+        # LLM-A: conversational agent
+        self.agent_llm_provider = os.getenv("AGENT_LLM_PROVIDER", "gemini")
+        self.agent_llm_model = os.getenv("AGENT_LLM_MODEL", self.gemini_model)
+
+        # LLM-B: UX evaluator
+        self.evaluator_llm_provider = os.getenv("EVALUATOR_LLM_PROVIDER", "gemini")
+        self.evaluator_llm_model = os.getenv("EVALUATOR_LLM_MODEL", self.gemini_model)
 
         self.prompts_dir = ROOT_DIR / "prompts"
         self.system_prompt_path = self.prompts_dir / "system_prompt_agent.md"

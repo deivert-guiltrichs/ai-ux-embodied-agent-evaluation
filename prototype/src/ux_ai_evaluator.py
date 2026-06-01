@@ -10,6 +10,8 @@ from src.config import settings
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
+
+SESSIONS_DIR = DATA_DIR / "sessions"
 TRANSCRIPTS_DIR = DATA_DIR / "transcripts"
 AI_EVALUATIONS_DIR = DATA_DIR / "ai_evaluations"
 
@@ -21,7 +23,7 @@ class UXAIEvaluatorService:
         settings.validate()
 
         self.client = genai.Client(api_key=settings.gemini_api_key)
-        self.model = settings.gemini_model
+        self.model = settings.evaluator_llm_model
         self.evaluator_prompt = self._load_evaluator_prompt()
 
     def _load_evaluator_prompt(self) -> str:
@@ -30,9 +32,13 @@ class UXAIEvaluatorService:
 
     def evaluate_session(self, session_id: str) -> Dict[str, Any]:
         transcript = self._load_transcript(session_id)
+        session_data = self._load_session_metadata(session_id)
+        condition_context = self._build_condition_context(session_data)
 
         prompt = f"""
 {self.evaluator_prompt}
+
+{condition_context}
 
 Transcripción de la interacción:
 
@@ -56,6 +62,8 @@ Transcripción de la interacción:
 
             evaluation_data = {
                 "session_id": session_id,
+                "participant_id": session_data.get("participant_id", ""),
+                "condition": session_data.get("condition", ""),
                 "source": "ai",
                 "instrument": "UEQ-S",
                 "model": self.model,
@@ -69,6 +77,7 @@ Transcripción de la interacción:
         except Exception as error:
             evaluation_data = self._fallback_ai_evaluation(
                 session_id=session_id,
+                session_data=session_data,
                 error_message=str(error)
             )
 
@@ -97,6 +106,43 @@ Transcripción de la interacción:
         with open(transcript_file, "r", encoding="utf-8") as file:
             return file.read()
 
+    def _load_session_metadata(self, session_id: str) -> Dict[str, Any]:
+        session_file = SESSIONS_DIR / f"{session_id}.json"
+
+        if not session_file.exists():
+            raise FileNotFoundError(
+                f"No existe el archivo de sesión: {session_id}"
+            )
+
+        with open(session_file, "r", encoding="utf-8") as file:
+            return json.load(file)
+
+    def _build_condition_context(self, session_data: Dict[str, Any]) -> str:
+        condition = session_data.get("condition", "unknown")
+
+        if condition == "embodied":
+            description = (
+                "Condición A / embodied: el usuario interactuó con un agente virtual académico "
+                "con avatar visual básico, animación facial/corporal simple y voz del navegador."
+            )
+        elif condition == "text":
+            description = (
+                "Condición B / text: el usuario interactuó con una interfaz conversacional textual plana, "
+                "sin avatar visual, sin voz y sin representación corporizada."
+            )
+        else:
+            description = (
+                "Condición no especificada: no se cuenta con información suficiente sobre la modalidad visual."
+            )
+
+        return f"""
+Contexto experimental de la sesión:
+- Session ID: {session_data.get("session_id", "")}
+- Participante anónimo: {session_data.get("participant_id", "")}
+- Condición registrada: {condition}
+- Descripción de la condición: {description}
+"""
+
     def _parse_json_response(self, raw_text: str) -> Dict[str, Any]:
         cleaned = raw_text.strip()
 
@@ -124,7 +170,7 @@ Transcripción de la interacción:
 
             try:
                 value = int(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 value = 4
 
             if value < 1:
@@ -148,7 +194,10 @@ Transcripción de la interacción:
         return {
             "pragmatic_quality": pragmatic_score,
             "hedonic_quality": hedonic_score,
-            "global_score": global_score
+            "global_score": global_score,
+            "ueqs_pragmatic_quality": pragmatic_score,
+            "ueqs_hedonic_quality": hedonic_score,
+            "ueqs_global_score": global_score
         }
 
     def _average_items(self, answers: Dict[str, int], items: list[str]) -> float:
@@ -165,7 +214,12 @@ Transcripción de la interacción:
 
         return round(sum(values) / len(values), 2)
 
-    def _fallback_ai_evaluation(self, session_id: str, error_message: str) -> Dict[str, Any]:
+    def _fallback_ai_evaluation(
+        self,
+        session_id: str,
+        session_data: Dict[str, Any],
+        error_message: str
+    ) -> Dict[str, Any]:
         answers = {
             "item_1": 5,
             "item_2": 5,
@@ -179,6 +233,8 @@ Transcripción de la interacción:
 
         return {
             "session_id": session_id,
+            "participant_id": session_data.get("participant_id", ""),
+            "condition": session_data.get("condition", ""),
             "source": "ai",
             "instrument": "UEQ-S",
             "model": self.model,

@@ -1,11 +1,11 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.gemini_client import GeminiClient
 from src.session_logger import SessionLogger
@@ -15,8 +15,8 @@ from src.ux_ai_evaluator import UXAIEvaluatorService
 
 app = FastAPI(
     title="AI UX Embodied Agent Backend",
-    description="Backend local para agente virtual académico con Gemini.",
-    version="0.4.0"
+    description="Backend local para PoC de agente virtual académico con Gemini.",
+    version="0.5.0"
 )
 
 app.add_middleware(
@@ -36,8 +36,15 @@ ux_human_service = UXHumanEvaluationService()
 ux_ai_service = UXAIEvaluatorService()
 
 
+class StartSessionRequest(BaseModel):
+    consent_accepted: bool
+    condition: Optional[str] = "random"
+
+
 class StartSessionResponse(BaseModel):
     session_id: str
+    participant_id: str
+    condition: str
     message: str
 
 
@@ -49,6 +56,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     session_id: str
     response: str
+    response_source: str
 
 
 class EndSessionRequest(BaseModel):
@@ -57,13 +65,17 @@ class EndSessionRequest(BaseModel):
 
 class EndSessionResponse(BaseModel):
     session_id: str
+    participant_id: Optional[str] = None
+    condition: Optional[str] = None
     ended: bool
+    duration_seconds: Optional[float] = None
     transcript_path: str
 
 
 class HumanUXEvaluationRequest(BaseModel):
     session_id: str
     answers: Dict[str, int]
+    godspeed_answers: Dict[str, int] = Field(default_factory=dict)
     open_comment: str = ""
 
 
@@ -100,49 +112,56 @@ def home(request: Request):
 def health_check():
     return {
         "status": "healthy",
-        "service": "FastAPI + Gemini + Web Avatar",
-        "version": "0.4.0"
+        "service": "FastAPI + Gemini + Web Agent PoC",
+        "version": "0.5.0"
     }
 
 
 @app.post("/session/start", response_model=StartSessionResponse)
-def start_session():
-    session = session_logger.create_session()
-    return StartSessionResponse(**session)
+def start_session(request: StartSessionRequest):
+    try:
+        session = session_logger.create_session(
+            condition=request.condition,
+            consent_accepted=request.consent_accepted
+        )
+
+        return StartSessionResponse(**session)
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
 
 
 @app.post("/agent/chat", response_model=ChatResponse)
 def chat_with_agent(request: ChatRequest):
     try:
-        print("SESSION_ID RECIBIDO:", request.session_id)
-        print("MENSAJE RECIBIDO:", request.message)
+        result = gemini_client.generate_agent_response_with_source(request.message)
 
-        agent_response = gemini_client.generate_agent_response(request.message)
-
-        print("RESPUESTA GENERADA:", agent_response)
+        agent_response = result["response"]
+        response_source = result["source"]
 
         session_logger.add_turn(
             session_id=request.session_id,
             user_message=request.message,
-            agent_response=agent_response
+            agent_response=agent_response,
+            response_source=response_source
         )
 
         return ChatResponse(
             session_id=request.session_id,
-            response=agent_response
+            response=agent_response,
+            response_source=response_source
         )
 
     except FileNotFoundError as error:
-        print("ERROR SESIÓN NO ENCONTRADA:", str(error))
-
         raise HTTPException(
             status_code=404,
-            detail="La sesión indicada no existe."
+            detail=str(error)
         )
 
     except Exception as error:
-        print("ERROR EN /agent/chat:", str(error))
-
         raise HTTPException(
             status_code=500,
             detail=f"Error interno en /agent/chat: {str(error)}"
@@ -155,10 +174,10 @@ def end_session(request: EndSessionRequest):
         result = session_logger.end_session(request.session_id)
         return EndSessionResponse(**result)
 
-    except FileNotFoundError:
+    except FileNotFoundError as error:
         raise HTTPException(
             status_code=404,
-            detail="La sesión indicada no existe."
+            detail=str(error)
         )
 
 
@@ -167,10 +186,10 @@ def get_session(session_id: str):
     try:
         return session_logger.get_session(session_id)
 
-    except FileNotFoundError:
+    except FileNotFoundError as error:
         raise HTTPException(
             status_code=404,
-            detail="La sesión indicada no existe."
+            detail=str(error)
         )
 
 
@@ -178,7 +197,15 @@ def get_session(session_id: str):
 def save_human_ux_evaluation(request: HumanUXEvaluationRequest):
     try:
         result = ux_human_service.save_evaluation(request.model_dump())
+        session_logger.mark_human_evaluation_completed(request.session_id)
+
         return HumanUXEvaluationResponse(**result)
+
+    except FileNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error)
+        )
 
     except ValueError as error:
         raise HTTPException(
@@ -191,6 +218,8 @@ def save_human_ux_evaluation(request: HumanUXEvaluationRequest):
 def evaluate_ux_with_ai(request: AIUXEvaluationRequest):
     try:
         result = ux_ai_service.evaluate_session(request.session_id)
+        session_logger.mark_ai_evaluation_completed(request.session_id)
+
         return AIUXEvaluationResponse(**result)
 
     except FileNotFoundError as error:

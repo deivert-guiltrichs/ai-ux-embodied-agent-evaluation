@@ -2,31 +2,107 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Agente Virtual Académico</title>
+    <title>PoC Agente Virtual Académico</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
 
-<div class="app-container">
+<!-- Pantalla inicial de consentimiento -->
+<div id="consentScreen" class="consent-screen">
+    <div class="consent-card">
+        <h1>Prueba de Concepto del Agente Virtual Académico</h1>
 
-    <section class="agent-panel">
+        <p>
+            Esta actividad forma parte de un proyecto académico del curso
+            <strong>PF-3311 Agentes Virtuales Inteligentes</strong>. La prueba consiste
+            en interactuar brevemente con un sistema conversacional que explica conceptos
+            básicos de bases de datos.
+        </p>
+
+        <p>
+            El objetivo es valorar la experiencia de uso del prototipo bajo dos posibles
+            condiciones: una interfaz con avatar visual básico y una interfaz textual sin avatar.
+        </p>
+
+        <div class="consent-notice">
+            <strong>Condiciones de participación:</strong>
+            <ul>
+                <li>La participación es voluntaria.</li>
+                <li>No se solicitará nombre, cédula, correo, teléfono ni datos personales.</li>
+                <li>El sistema generará automáticamente un ID anónimo de participante.</li>
+                <li>La interacción será registrada únicamente con fines académicos.</li>
+                <li>Puede finalizar la prueba en cualquier momento.</li>
+            </ul>
+        </div>
+
+        <label class="consent-check">
+            <input type="checkbox" id="consentCheckbox">
+            Confirmo que leí la información anterior y acepto participar voluntariamente.
+        </label>
+
+        <div class="condition-selector">
+            <label for="conditionSelect">Condición experimental:</label>
+            <select id="conditionSelect">
+                <option value="random">Asignación aleatoria</option>
+                <option value="embodied">Condición A: agente con avatar visual</option>
+                <option value="text">Condición B: interfaz textual sin avatar</option>
+            </select>
+            <p class="condition-help">
+                Para pruebas técnicas puede seleccionar una condición específica. Para una aplicación formal,
+                se recomienda usar asignación aleatoria.
+            </p>
+        </div>
+
+        <button id="startButton" class="start-button" onclick="startExperimentalSession()">
+            Iniciar interacción
+        </button>
+
+        <div id="consentError" class="consent-error hidden"></div>
+    </div>
+</div>
+
+<!-- Aplicación principal -->
+<div id="mainApp" class="app-container hidden">
+
+    <!-- Panel del agente corporizado: se muestra solo en condición embodied -->
+    <section id="agentPanel" class="agent-panel">
         <div class="avatar-card">
             <div id="avatar" class="avatar idle">
+                <div class="avatar-shadow"></div>
+
                 <div class="head">
                     <div class="hair"></div>
 
-                    <div class="eyes">
-                        <div class="eye left-eye"></div>
-                        <div class="eye right-eye"></div>
+                    <div class="brows">
+                        <div class="brow"></div>
+                        <div class="brow"></div>
                     </div>
 
+                    <div class="eyes">
+                        <div class="eye left-eye">
+                            <div class="pupil"></div>
+                        </div>
+                        <div class="eye right-eye">
+                            <div class="pupil"></div>
+                        </div>
+                    </div>
+
+                    <div class="nose"></div>
                     <div id="mouth" class="mouth"></div>
                 </div>
 
                 <div class="neck"></div>
 
-                <div class="body">
+                <div class="torso">
+                    <div class="shirt"></div>
+                    <div class="jacket left-jacket"></div>
+                    <div class="jacket right-jacket"></div>
                     <div class="tie"></div>
+                </div>
+
+                <div class="arms">
+                    <div class="arm left-arm"></div>
+                    <div class="arm right-arm"></div>
                 </div>
             </div>
 
@@ -37,36 +113,66 @@
         </div>
     </section>
 
-    <section class="chat-panel">
+    <!-- Panel conversacional -->
+    <section id="chatPanel" class="chat-panel">
         <div class="chat-header">
-            <h2>Interacción guiada</h2>
-            <p>Haz una pregunta o selecciona una opción.</p>
+            <h2 id="interfaceTitle">Interacción guiada</h2>
+            <p id="interfaceDescription">
+                Haz una pregunta o selecciona una opción.
+            </p>
+        </div>
+
+        <div class="participant-box">
+            <div>
+                <span>Participante:</span>
+                <strong id="participantIdLabel">No asignado</strong>
+            </div>
+            <div>
+                <span>Sesión:</span>
+                <strong id="sessionIdLabel">No iniciada</strong>
+            </div>
+            <div>
+                <span>Condición:</span>
+                <strong id="conditionLabel">No asignada</strong>
+            </div>
+        </div>
+
+        <div class="task-box">
+            <h3>Tarea guiada de interacción</h3>
+            <p>
+                Durante esta sesión, interactúe con el sistema como si necesitara comprender
+                conceptos introductorios de diseño de bases de datos.
+            </p>
+            <ol>
+                <li>Solicite una explicación sobre diseño de bases de datos.</li>
+                <li>Pida un ejemplo cotidiano que ayude a comprender el concepto.</li>
+                <li>Pregunte la diferencia entre clave primaria y clave foránea.</li>
+                <li>Solicite una aclaración si alguna respuesta no queda clara.</li>
+            </ol>
+            <p class="task-note">
+                Al finalizar, complete el cuestionario de experiencia de usuario que aparecerá en pantalla.
+            </p>
         </div>
 
         <div class="guided-buttons">
-            <button onclick="sendGuidedQuestion('Explícame qué es una base de datos.')">
-                ¿Qué es una base de datos?
+            <button onclick="sendGuidedQuestion('Explícame qué es el diseño de bases de datos.')">
+                Diseño de bases de datos
             </button>
-            <button onclick="sendGuidedQuestion('Explícame qué es una tabla en bases de datos.')">
-                ¿Qué es una tabla?
+            <button onclick="sendGuidedQuestion('Dame un ejemplo cotidiano de una base de datos.')">
+                Ejemplo cotidiano
             </button>
-            <button onclick="sendGuidedQuestion('Explícame qué es una llave primaria con un ejemplo sencillo.')">
-                Llave primaria
+            <button onclick="sendGuidedQuestion('Explícame la diferencia entre clave primaria y clave foránea.')">
+                Clave primaria vs foránea
             </button>
-            <button onclick="sendGuidedQuestion('Explícame qué es una relación entre tablas.')">
-                Relación entre tablas
+            <button onclick="sendGuidedQuestion('No entendí bien. ¿Puedes explicarlo de forma más sencilla?')">
+                Pedir aclaración
             </button>
         </div>
 
         <div id="chatMessages" class="chat-messages">
             <div class="message agent-message">
-                Hola. Soy tu agente académico. Puedo ayudarte con conceptos básicos de bases de datos.
+                La sesión aún no ha iniciado.
             </div>
-        </div>
-
-        <div class="session-info">
-            <span>Sesión actual:</span>
-            <strong id="sessionIdLabel">Iniciando sesión...</strong>
         </div>
 
         <div class="chat-input-area">
@@ -83,6 +189,7 @@
             <button class="finish-button" onclick="finishSession()">Finalizar sesión</button>
         </div>
 
+        <!-- Cuestionario UX -->
         <div id="uxPanel" class="ux-panel hidden">
             <h2>Cuestionario UX breve</h2>
             <p class="ux-description">
@@ -95,6 +202,8 @@
             </div>
 
             <form id="uxForm">
+
+                <h3>UEQ-S</h3>
 
                 <div class="ux-item">
                     <label>1. Obstructivo — Apoyador</label>
@@ -144,6 +253,68 @@
                     <span id="value_item_8">4</span>
                 </div>
 
+                <h3>Godspeed reducido</h3>
+
+                <p class="ux-description">
+                    Evalúe cómo percibió al agente durante la interacción. Use la misma escala de 1 a 7.
+                </p>
+
+                <h4>Antropomorfismo</h4>
+
+                <div class="ux-item">
+                    <label>Artificial — Natural</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_anthro_1">
+                    <span id="value_godspeed_anthro_1">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>Mecánico — Humano</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_anthro_2">
+                    <span id="value_godspeed_anthro_2">4</span>
+                </div>
+
+                <h4>Simpatía</h4>
+
+                <div class="ux-item">
+                    <label>Antipático — Simpático</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_like_1">
+                    <span id="value_godspeed_like_1">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>Desagradable — Agradable</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_like_2">
+                    <span id="value_godspeed_like_2">4</span>
+                </div>
+
+                <h4>Inteligencia percibida</h4>
+
+                <div class="ux-item">
+                    <label>Incompetente — Competente</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_intel_1">
+                    <span id="value_godspeed_intel_1">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>Ignorante — Inteligente</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_intel_2">
+                    <span id="value_godspeed_intel_2">4</span>
+                </div>
+
+                <h4>Seguridad percibida</h4>
+
+                <div class="ux-item">
+                    <label>Inseguro — Seguro</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_safety_1">
+                    <span id="value_godspeed_safety_1">4</span>
+                </div>
+
+                <div class="ux-item">
+                    <label>Inquietante — Tranquilizador</label>
+                    <input type="range" min="1" max="7" value="4" id="godspeed_safety_2">
+                    <span id="value_godspeed_safety_2">4</span>
+                </div>
+
                 <div class="ux-open-question">
                     <label for="openComment">
                         ¿Qué aspecto del agente virtual le pareció más positivo o qué mejoraría?
@@ -160,6 +331,11 @@
 
             <div id="aiEvaluationPanel" class="ai-evaluation-panel hidden">
                 <h3>Evaluación UX generada por IA</h3>
+
+                <p>
+                    Esta función prepara el flujo para que un segundo modelo pueda evaluar
+                    posteriormente la misma transcripción.
+                </p>
 
                 <button type="button" class="ai-evaluate-button" onclick="runAIEvaluation()">
                     Generar evaluación UX con IA
