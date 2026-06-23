@@ -212,7 +212,7 @@ async function loadVrmAvatarIfNeeded() {
     }
 
     try {
-        await import("/static/js/vrm-avatar.js");
+        await import(`/static/js/vrm-avatar.js?v=${Date.now()}`);
 
         if (window.vrmAvatar && typeof window.vrmAvatar.init === "function") {
             await window.vrmAvatar.init();
@@ -230,52 +230,6 @@ async function loadVrmAvatarIfNeeded() {
     }
 }
 
-
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-function renderBasicMarkdown(value) {
-    let html = escapeHtml(value);
-
-    // Markdown básico suficiente para respuestas del agente, sin permitir HTML crudo.
-    html = html.replace(/\*\*\s*([^*\n][\s\S]*?[^*\n])\s*\*\*/g, "<strong>$1</strong>");
-    html = html.replace(/__\s*([^_\n][\s\S]*?[^_\n])\s*__/g, "<strong>$1</strong>");
-    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-    html = html.replace(/\n/g, "<br>");
-
-    return html;
-}
-
-function cleanTextForSpeech(value) {
-    return String(value ?? "")
-        // Bloques y código inline: conservar contenido, quitar marcadores.
-        .replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, " "))
-        .replace(/`([^`]+)`/g, "$1")
-        // Negrita/cursiva Markdown.
-        .replace(/\*\*\s*([^*]+?)\s*\*\*/g, "$1")
-        .replace(/__\s*([^_]+?)\s*__/g, "$1")
-        .replace(/\*\s*([^*]+?)\s*\*/g, "$1")
-        .replace(/_\s*([^_]+?)\s*_/g, "$1")
-        // Encabezados, listas, citas y separadores Markdown.
-        .replace(/^\s{0,3}#{1,6}\s+/gm, "")
-        .replace(/^\s*[-*+]\s+/gm, "")
-        .replace(/^\s*\d+[.)]\s+/gm, "")
-        .replace(/^\s*>\s?/gm, "")
-        .replace(/-{3,}|_{3,}|\*{3,}/g, " ")
-        // Enlaces Markdown: leer solo el texto visible.
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
-        // Limpiar asteriscos residuales y espacios.
-        .replace(/[\*_~#>`]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-}
-
 function clearChat() {
     chatMessages.innerHTML = "";
 }
@@ -286,12 +240,11 @@ function addMessage(content, sender) {
 
     if (sender === "user") {
         message.classList.add("user-message");
-        message.textContent = content;
     } else {
         message.classList.add("agent-message");
-        message.innerHTML = renderBasicMarkdown(content);
     }
 
+    message.textContent = content;
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -401,9 +354,7 @@ function selectBestSpanishVoice(voices) {
 }
 
 async function speakText(text) {
-    const speechText = cleanTextForSpeech(text);
-
-    if (!speechText || currentCondition !== "embodied") {
+    if (!text || currentCondition !== "embodied") {
         setAvatarState("idle");
         return;
     }
@@ -415,9 +366,11 @@ async function speakText(text) {
 
     await prepareVoiceSelection();
 
+    // Detiene cualquier habla previa y deja la boca cerrada antes del nuevo audio.
+    stopAvatarTalkingOnly();
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(speechText);
+    const utterance = new SpeechSynthesisUtterance(text);
     const voice = selectedLatinVoice || selectBestSpanishVoice(window.speechSynthesis.getVoices());
 
     if (voice) {
@@ -429,25 +382,45 @@ async function speakText(text) {
         console.warn("No se encontró una voz española latinoamericana; se usará la voz predeterminada del navegador.");
     }
 
-    utterance.rate = 0.94;
-    utterance.pitch = 1.0;
+    utterance.rate = 0.92;
+    utterance.pitch = 1.02;
     utterance.volume = 1.0;
 
-    setAvatarState("talking");
+    let started = false;
+    let ended = false;
 
-    if (window.vrmAvatar && typeof window.vrmAvatar.startTalking === "function") {
-        window.vrmAvatar.startTalking(speechText);
-    }
+    const startAvatarSpeech = () => {
+        if (started || ended) {
+            return;
+        }
 
-    utterance.onstart = () => {
+        started = true;
         setAvatarState("talking");
 
         if (window.vrmAvatar && typeof window.vrmAvatar.startTalking === "function") {
-            window.vrmAvatar.startTalking(speechText);
+            window.vrmAvatar.startTalking(text);
         }
     };
 
+    const stopAvatarSpeech = () => {
+        if (ended) {
+            return;
+        }
+
+        ended = true;
+        setAvatarState("idle");
+        stopAvatarTalkingOnly();
+    };
+
+    utterance.onstart = () => {
+        // Importante: no activar boca/cuerpo antes de que el navegador confirme el inicio del audio.
+        startAvatarSpeech();
+    };
+
     utterance.onboundary = (event) => {
+        // Algunos navegadores emiten boundary incluso si onstart se retrasa. Lo usamos como respaldo.
+        startAvatarSpeech();
+
         if (window.vrmAvatar && typeof window.vrmAvatar.updateSpeechProgress === "function") {
             window.vrmAvatar.updateSpeechProgress({
                 charIndex: event.charIndex || 0,
@@ -457,23 +430,9 @@ async function speakText(text) {
         }
     };
 
-    utterance.onend = () => {
-        setAvatarState("idle");
+    utterance.onend = stopAvatarSpeech;
+    utterance.onerror = stopAvatarSpeech;
 
-        if (window.vrmAvatar && typeof window.vrmAvatar.stopTalking === "function") {
-            window.vrmAvatar.stopTalking();
-        }
-    };
-
-    utterance.onerror = () => {
-        setAvatarState("idle");
-
-        if (window.vrmAvatar && typeof window.vrmAvatar.stopTalking === "function") {
-            window.vrmAvatar.stopTalking();
-        }
-    };
-
-    // En Chrome, llamar resume() antes de speak() ayuda después de cancelaciones previas.
     try {
         window.speechSynthesis.resume();
     } catch (error) {
@@ -481,6 +440,12 @@ async function speakText(text) {
     }
 
     window.speechSynthesis.speak(utterance);
+}
+
+function stopAvatarTalkingOnly() {
+    if (window.vrmAvatar && typeof window.vrmAvatar.stopTalking === "function") {
+        window.vrmAvatar.stopTalking();
+    }
 }
 
 function stopSpeech() {

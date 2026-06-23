@@ -67,43 +67,17 @@
     <!-- Panel del agente corporizado: se muestra solo en condición embodied -->
     <section id="agentPanel" class="agent-panel">
         <div class="avatar-card">
-            <div id="avatar" class="avatar idle">
-                <div class="avatar-shadow"></div>
 
-                <div class="head">
-                    <div class="hair"></div>
+            <!-- Avatar VRM 3D -->
+            <div class="vrm-stage">
+                <div id="vrmLoading" class="vrm-loading">Cargando avatar 3D...</div>
+                <canvas id="vrmCanvas" class="vrm-canvas"></canvas>
+            </div>
 
-                    <div class="brows">
-                        <div class="brow"></div>
-                        <div class="brow"></div>
-                    </div>
-
-                    <div class="eyes">
-                        <div class="eye left-eye">
-                            <div class="pupil"></div>
-                        </div>
-                        <div class="eye right-eye">
-                            <div class="pupil"></div>
-                        </div>
-                    </div>
-
-                    <div class="nose"></div>
-                    <div id="mouth" class="mouth"></div>
-                </div>
-
-                <div class="neck"></div>
-
-                <div class="torso">
-                    <div class="shirt"></div>
-                    <div class="jacket left-jacket"></div>
-                    <div class="jacket right-jacket"></div>
-                    <div class="tie"></div>
-                </div>
-
-                <div class="arms">
-                    <div class="arm left-arm"></div>
-                    <div class="arm right-arm"></div>
-                </div>
+            <!-- Compatibilidad con el JS anterior del avatar HTML/CSS.
+                 Este bloque queda oculto, pero evita errores si app.js todavía referencia #avatar o #mouth. -->
+            <div id="avatar" class="avatar idle hidden" aria-hidden="true">
+                <div id="mouth" class="mouth"></div>
             </div>
 
             <h1>Agente Académico</h1>
@@ -116,10 +90,25 @@
     <!-- Panel conversacional -->
     <section id="chatPanel" class="chat-panel">
         <div class="chat-header">
-            <h2 id="interfaceTitle">Interacción guiada</h2>
-            <p id="interfaceDescription">
-                Haz una pregunta o selecciona una opción.
-            </p>
+            <div class="chat-header-main">
+                <div>
+                    <h2 id="interfaceTitle">Interacción guiada</h2>
+                    <p id="interfaceDescription">
+                        Haz una pregunta o selecciona una opción.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    id="toggleTextButton"
+                    class="secondary-control-button hidden"
+                    onclick="toggleChatText()"
+                    aria-expanded="true"
+                    aria-controls="taskBox chatMessages"
+                >
+                    Ocultar texto
+                </button>
+            </div>
         </div>
 
         <div class="participant-box">
@@ -137,7 +126,7 @@
             </div>
         </div>
 
-        <div class="task-box">
+        <div id="taskBox" class="task-box">
             <h3>Tarea guiada de interacción</h3>
             <p>
                 Durante esta sesión, interactúe con el sistema como si necesitara comprender
@@ -150,23 +139,8 @@
                 <li>Solicite una aclaración si alguna respuesta no queda clara.</li>
             </ol>
             <p class="task-note">
-                Al finalizar, complete el cuestionario de experiencia de usuario que aparecerá en pantalla.
+                Al finalizar, se abrirá una pantalla separada para completar la evaluación UX.
             </p>
-        </div>
-
-        <div class="guided-buttons">
-            <button onclick="sendGuidedQuestion('Explícame qué es el diseño de bases de datos.')">
-                Diseño de bases de datos
-            </button>
-            <button onclick="sendGuidedQuestion('Dame un ejemplo cotidiano de una base de datos.')">
-                Ejemplo cotidiano
-            </button>
-            <button onclick="sendGuidedQuestion('Explícame la diferencia entre clave primaria y clave foránea.')">
-                Clave primaria vs foránea
-            </button>
-            <button onclick="sendGuidedQuestion('No entendí bien. ¿Puedes explicarlo de forma más sencilla?')">
-                Pedir aclaración
-            </button>
         </div>
 
         <div id="chatMessages" class="chat-messages">
@@ -176,17 +150,49 @@
         </div>
 
         <div class="chat-input-area">
+            <button
+                type="button"
+                id="speechInputButton"
+                class="mic-button hidden"
+                onclick="toggleSpeechInput()"
+                title="Dictar pregunta por micrófono"
+                aria-label="Dictar pregunta por micrófono"
+            >
+                <svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v5c0 1.66 1.34 3 3 3Z"></path>
+                    <path d="M17.3 11c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.72 6.23 6.1 6.68V21h1.8v-3.32C16.28 17.23 19 14.4 19 11h-1.7Z"></path>
+                </svg>
+            </button>
+
             <input
                 type="text"
                 id="userInput"
-                placeholder="Escribe tu pregunta sobre bases de datos..."
+                placeholder="Escribe o dicta tu pregunta sobre bases de datos..."
                 onkeydown="handleEnter(event)"
             >
             <button onclick="sendMessage()">Enviar</button>
         </div>
 
+        <div id="speechInputStatus" class="speech-input-status hidden" aria-live="polite"></div>
+
         <div class="session-actions">
             <button class="finish-button" onclick="finishSession()">Finalizar sesión</button>
+        </div>
+    </section>
+
+</div>
+
+<!-- Pantalla separada de evaluación UX -->
+<div id="evaluationScreen" class="evaluation-screen hidden">
+    <div class="evaluation-shell">
+        <div class="evaluation-intro">
+            <span class="evaluation-step">Etapa 2 de 2</span>
+            <h1>Evaluación post-interacción</h1>
+            <p>
+                La conversación con el agente ya finalizó. Complete los instrumentos UX en esta
+                pantalla separada. Esta separación evita que el cuestionario compita visualmente
+                con el agente durante la interacción.
+            </p>
         </div>
 
         <!-- Cuestionario UX -->
@@ -344,8 +350,7 @@
                 <div id="aiEvaluationResult" class="ai-evaluation-result hidden"></div>
             </div>
         </div>
-    </section>
-
+    </div>
 </div>
 
 <script src="/static/js/app.js"></script>
