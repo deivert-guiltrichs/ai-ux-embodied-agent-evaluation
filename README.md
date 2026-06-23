@@ -439,16 +439,3 @@ docs/entregable_3_paper.pdf
 ```
 
 Documenta el problema, los trabajos relacionados, el desarrollo del agente, la metodología, los resultados del estudio (N = 10), el análisis y discusión, y las conclusiones, incluyendo la proyección de publicación.
-
-## 19. Nota sobre VRM
-
-La versión actual utiliza un avatar visual básico implementado en HTML, CSS y JavaScript.
-
-Como mejora futura, se contempla integrar un avatar VRM en la interfaz web para fortalecer la representación corporizada mediante:
-
-* Cuerpo completo.
-* Parpadeo.
-* Expresiones faciales.
-* Movimiento corporal básico.
-* Animación de habla.
-* Mayor realismo visual.
